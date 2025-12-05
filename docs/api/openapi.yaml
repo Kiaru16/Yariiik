@@ -1,0 +1,198 @@
+openapi: 3.0.0
+info:
+  title: Mini-Shop Catalog API
+  version: v1
+  description: API для керування каталогом товарів (контекст Управління Каталогом)
+servers:
+  - url: http://localhost:3000
+    description: Локальне середовище розробки
+
+paths:
+  /items:
+    get:
+      summary: Отримати список усіх товарів
+      tags:
+        - Items
+      responses:
+        '200':
+          description: Успішне отримання списку
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemResponse'
+    post:
+      summary: Створити новий товар
+      tags:
+        - Items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemCreateRequest'
+      responses:
+        '201':
+          description: Товар успішно створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+        '400':
+          description: Некоректні вхідні дані
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /items/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+        description: ID товару
+    get:
+      summary: Отримати деталі товару за ID
+      tags:
+        - Items
+      responses:
+        '200':
+          description: Успішне отримання деталей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+        '404':
+          description: Товар не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Частково оновити товар
+      tags:
+        - Items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemUpdateRequest'
+      responses:
+        '200':
+          description: Товар успішно оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+        '400':
+          description: Некоректні дані
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Товар не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Видалити товар
+      tags:
+        - Items
+      responses:
+        '204':
+          description: Товар успішно видалено
+        '404':
+          description: Товар не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # --- DTOs ---
+    ItemCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Ноутбук Pro
+        price:
+          type: number
+          format: float
+          example: 1200.00
+      required:
+        - name
+        - price
+
+    ItemUpdateRequest:
+      type: object
+      description: Схема для часткового оновлення товару (PATCH)
+      properties:
+        name:
+          type: string
+          example: Ноутбук Pro Max
+        price:
+          type: number
+          format: float
+          example: 1250.00
+
+    ItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 1
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-12-05T10:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-12-05T10:30:00Z'
+      required:
+        - id
+        - name
+        - price
+
+    # --- Error Model (Виправлено) ---
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Загальний тип помилки (наприклад, ValidationError, NotFoundError)
+          example: NotFoundError
+        code:
+          type: string
+          description: Конкретний код помилки (наприклад, PRICE_REQUIRED, ITEM_NOT_FOUND)
+          example: ITEM_NOT_FOUND
+        details:
+          type: array
+          description: Додаткова інформація про помилку (наприклад, поле, яке викликало помилку)
+          items:
+            type: object # ✅ ВИПРАВЛЕНО: додано type: object
+            properties:
+              field:
+                type: string
+                example: price
+              message:
+                type: string
+                example: Price cannot be negative
+      required:
+        - error
+        - code
